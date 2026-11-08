@@ -1,0 +1,24 @@
+{
+  "name": "sms-agent",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Personal AI assistant that works over plain SMS (Twilio + Claude), hosted on Vercel.",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.6.0",
+    "@vercel/blob": "^2.8.2",
+    "@vercel/functions": "^3.11.0",
+    "twilio": "^6.3.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": "22.x"
+  }
+}
