@@ -3,6 +3,8 @@
  * Nothing secret is ever written into this repository.
  */
 
+import { currentSettings } from "./settings.js";
+
 function required(name: string): string {
   const value = process.env[name];
   if (!value) throw new Error(`Missing environment variable ${name}`);
@@ -43,8 +45,20 @@ export const config = {
   get ownerPhone() {
     return normalizePhone(required("MY_PHONE"));
   },
+  /** Owner's timezone: whatever they last set by text, otherwise the TIMEZONE variable. */
   get timezone() {
-    return optional("TIMEZONE", "America/New_York");
+    return currentSettings().timezone || optional("TIMEZONE", "America/New_York");
+  },
+  /** Google OAuth client (Google Cloud console → Credentials). Only needed for Gmail. */
+  get googleClientId() {
+    return optional("GOOGLE_CLIENT_ID", "");
+  },
+  get googleClientSecret() {
+    return optional("GOOGLE_CLIENT_SECRET", "");
+  },
+  /** Public base URL of this deployment, e.g. https://sms-agent-rho.vercel.app */
+  get baseUrl() {
+    return optional("BASE_URL", "https://sms-agent-rho.vercel.app");
   },
   get ownerName() {
     return optional("OWNER_NAME", "");
