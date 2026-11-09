@@ -8,6 +8,8 @@ import { waitUntil } from "@vercel/functions";
 import twilio from "twilio";
 import { runAgent } from "../lib/agent.js";
 import { config, normalizePhone } from "../lib/config.js";
+import { learnFromExchange } from "../lib/memory.js";
+import { personaStatus } from "../lib/persona.js";
 import { store } from "../lib/store.js";
 import { chunkForSms, sendSms } from "../lib/twilio.js";
 
@@ -80,6 +82,7 @@ async function handleInBackground(text: string): Promise<void> {
     const [first, ...rest] = chunks;
     await store.pending.save(rest.length ? { chunks: rest, createdAt: new Date().toISOString() } : null);
     await sendSms(rest.length ? `${first}\n\n(${rest.length} more. Text MORE.)` : first);
+    await learnFromExchange(text, reply);
   } catch (err) {
     console.error("sms: failed to handle message", err);
     try {
@@ -92,5 +95,5 @@ async function handleInBackground(text: string): Promise<void> {
 
 /** Visiting the URL in a browser just confirms the service is up. */
 export async function GET(): Promise<Response> {
-  return new Response("SMS assistant is running.", { status: 200 });
+  return new Response(`SMS assistant is running. Persona: ${personaStatus()}.`, { status: 200 });
 }

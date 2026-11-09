@@ -1,11 +1,20 @@
 /**
- * Small settings the owner can change by texting (e.g. timezone when travelling).
- * Loaded once at the start of each turn; config.timezone reads from here first.
+ * Settings the owner can change by texting (timezone when travelling, which model, reply length).
+ * Loaded once at the start of each turn; config reads from here first.
  */
 import { get, put } from "@vercel/blob";
 
+export const MODELS = {
+  opus: "claude-opus-5-5",
+  sonnet: "claude-sonnet-5-5",
+} as const;
+export type ModelKey = keyof typeof MODELS;
+export type ReplyLength = "short" | "normal";
+
 export interface Settings {
   timezone?: string;
+  model?: ModelKey;
+  replyLength?: ReplyLength;
 }
 
 let cache: Settings | null = null;
@@ -44,4 +53,11 @@ export function isValidTimezone(tz: string): boolean {
   } catch {
     return false;
   }
+}
+
+/** One-line description for the "settings" text command and the system prompt. */
+export function describeSettings(timezone: string, modelKey: ModelKey, replyLength: ReplyLength): string {
+  const now = new Date().toLocaleString("en-US", { timeZone: timezone, hour: "numeric", minute: "2-digit", timeZoneName: "short" });
+  const modelName = modelKey === "opus" ? "Opus 5.5" : "Sonnet 5.5";
+  return `Settings\nTimezone: ${timezone} (now ${now})\nModel: ${modelName}\nReplies: ${replyLength}\n\nTo change, just say it: "switch to sonnet", "timezone New York", "shorter replies".`;
 }

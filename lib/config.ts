@@ -3,7 +3,7 @@
  * Nothing secret is ever written into this repository.
  */
 
-import { currentSettings } from "./settings.js";
+import { currentSettings, MODELS, type ModelKey, type ReplyLength } from "./settings.js";
 
 function required(name: string): string {
   const value = process.env[name];
@@ -71,7 +71,18 @@ export const config = {
   get validateTwilioSignature() {
     return optional("VALIDATE_TWILIO_SIGNATURE", "true") !== "false";
   },
-  model: "claude-opus-5-5",
+  /** Which Claude runs the twin. Default Opus 5.5; he can text "switch to sonnet". */
+  get modelKey(): ModelKey {
+    return currentSettings().model || "opus";
+  },
+  get model(): string {
+    return MODELS[this.modelKey];
+  },
+  get replyLength(): ReplyLength {
+    return currentSettings().replyLength || "normal";
+  },
+  /** Cheap model for the background memory-keeper job. */
+  memoryModel: "claude-haiku-5-5",
   /** Keep this many past turns (user + assistant texts) as conversation memory. */
   historyTurns: 40,
   /** Longest single SMS we send. Twilio's limit is 1600; shorter is easier to read on a phone. */

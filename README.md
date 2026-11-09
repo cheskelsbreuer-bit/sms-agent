@@ -54,6 +54,24 @@ Also make sure your Twilio phone number is in that service's Sender Pool (Messag
 
 Text `help` to your Twilio number. You should get a reply within a few seconds.
 
+## Personality
+
+The assistant is Chesky's "twin": it runs on the documents in `prompts/` (memory export, portrait, analysis) and the "Be me" rules from the original twin, adapted for SMS. After each exchange a small background job (Claude Haiku) writes new facts and corrections to `state/learned.json` in Blob. That memory only grows; nothing is ever removed automatically.
+
+## Settings by text
+
+Text `settings` to see them. Then just say it: "timezone Jerusalem", "switch to sonnet", "shorter replies". Model choices: Opus 5.5 (default) or Sonnet 5.5.
+
+## Gmail (optional, one-time)
+
+1. console.cloud.google.com → create a project (any name) → **APIs & Services → Library** → enable **Gmail API**.
+2. **APIs & Services → OAuth consent screen** → External → fill app name + your email → add both Gmail addresses under **Test users** → save. (Leave the app in Testing; no verification needed for personal use.)
+3. **Credentials → Create Credentials → OAuth client ID** → Web application → Authorized redirect URI: `https://YOUR-PROJECT.vercel.app/api/google/callback` → Create. Copy the Client ID and Client secret.
+4. In Vercel → Settings → Environment Variables add `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `BASE_URL` (`https://YOUR-PROJECT.vercel.app`). Redeploy.
+5. For each account, open in a browser: `https://YOUR-PROJECT.vercel.app/api/google/auth?key=YOUR_CRON_SECRET`, pick the account, allow. You'll see "Linked ...".
+
+Then text: "what's new in my email", "read the one from Sossie", "reply to it: ...". Sending always waits for your yes.
+
 ## How it works
 
 ```
@@ -63,6 +81,11 @@ lib/agent.ts  One conversation turn with Claude (tool loop, system prompt, memor
 lib/tools.ts  Notes and reminders
 lib/twilio.ts Sending, scheduling, and splitting long texts
 lib/store.ts  Small JSON files in Vercel Blob (history, notes, reminders)
+lib/persona.ts  The twin: persona rules + prompts/*.txt
+lib/memory.ts   Memory keeper (learns after each exchange)
+lib/google.ts + lib/gmail-tools.ts   Gmail via OAuth, multiple accounts
+lib/settings.ts  Timezone / model / reply length, changeable by text
+api/google/auth.ts + callback.ts     One-time account linking
 api/cron.ts   Daily: schedules reminders that were more than 35 days out
 ```
 
