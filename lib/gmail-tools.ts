@@ -76,7 +76,7 @@ export const readEmailTool = betaZodTool({
   description: "Read one email in full by its id (from search_email). Returns headers, the body text (trimmed) and attachment names.",
   inputSchema: z.object({
     id: z.string().describe("The message id from search_email."),
-    account: z.string().describe("The account the id came from (address or distinctive part)."),
+    account: accountHint,
     markAsRead: z.boolean().optional().describe("Mark it read in Gmail (default false)."),
   }),
   run: async ({ id, account, markAsRead }) => {
@@ -104,7 +104,7 @@ export const sendEmailTool = betaZodTool({
   description:
     "Send an email from one of the owner's Gmail accounts. ONLY call this after you have shown the owner the exact recipient, subject and body and they replied yes/send/ok. Never send without that confirmation in the conversation. To reply in an existing thread, pass replyToId.",
   inputSchema: z.object({
-    account: z.string().describe("Which account to send from (address or distinctive part)."),
+    account: z.string().optional().describe("Which account to send from (address or distinctive part). Required when more than one is linked."),
     to: z.string().describe("Recipient address(es), comma separated."),
     subject: z.string(),
     body: z.string().describe("Plain-text body, written the way the owner would write it."),

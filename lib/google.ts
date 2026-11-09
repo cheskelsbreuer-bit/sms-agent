@@ -52,6 +52,7 @@ export async function resolveAccount(hint?: string): Promise<GoogleAccount | Goo
   if (exact) return exact;
   const partial = accounts.filter((a) => a.email.toLowerCase().includes(h));
   if (partial.length === 1) return partial[0];
+  if (accounts.length === 1) return accounts[0]; // a wrong hint can't be ambiguous with one account
   return partial.length ? partial : accounts;
 }
 

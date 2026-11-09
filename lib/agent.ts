@@ -1,11 +1,12 @@
 /**
  * Runs one turn of the twin: takes the owner's text, lets Claude use tools, returns a plain-text reply.
+ * An empty string means the twin chose to say nothing.
  */
 import Anthropic from "@anthropic-ai/sdk";
 import { config } from "./config.js";
 import { gmailConfigured, gmailTools } from "./gmail-tools.js";
 import { learnedText, loadLearned } from "./memory.js";
-import { twinSystemText } from "./persona.js";
+import { SILENT, twinSystemText } from "./persona.js";
 import { describeSettings, loadSettings } from "./settings.js";
 import { settingsTools } from "./settings-tools.js";
 import { store, type ChatTurn } from "./store.js";
@@ -89,7 +90,7 @@ function buildSystem(learned: string): Anthropic.Beta.BetaTextBlockParam[] {
 function historyToMessages(history: ChatTurn[]): Anthropic.Beta.BetaMessageParam[] {
   const out: Anthropic.Beta.BetaMessageParam[] = [];
   for (const turn of history) {
-    const text = turn.role === "user" ? `[${stamp(turn.at)}] ${turn.text}` : turn.text;
+    const text = turn.role === "user" ? `[${stamp(turn.at)}] ${turn.text}` : turn.text || SILENT;
     const last = out[out.length - 1];
     if (last && last.role === turn.role && typeof last.content === "string") {
       last.content = `${last.content}\n${text}`;
@@ -135,10 +136,12 @@ export async function runAgent(userText: string): Promise<string> {
       .map((b) => b.text)
       .join("\n")
       .trim();
-    if (!reply) {
-      reply = final.stop_reason === "pause_turn" || final.stop_reason === "tool_use" ? "That took too many steps. Ask it simpler." : "Done.";
+    if (!reply && (final.stop_reason === "pause_turn" || final.stop_reason === "tool_use")) {
+      reply = "That took too many steps. Ask it simpler.";
     }
   }
+  // The twin may choose silence: the token alone, or nothing at all.
+  if (reply === SILENT || reply.replace(/\[silent\]/gi, "").trim() === "") reply = "";
 
   turns.push({ role: "assistant", text: reply, at: new Date().toISOString() });
   await store.conversation.save(turns.slice(-config.historyTurns));
